@@ -1,0 +1,2 @@
+MSRCR+CLAHE文件夹内为数据集预处理代码。
+ResNet-50文件夹内的fenlei1.py和fenlei2.py的功能为将数据集按照csv文件的标签进行0到4个病变等级的分类，并将其分为train、val、test三个数据集。main.py与resnet50为训练模型并进行测试，得到准确率。
