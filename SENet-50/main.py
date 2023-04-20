@@ -43,7 +43,7 @@ def main():
     train_directory = os.path.join(dataset, 'train')  # 训练集的路径，os.path.join()函数是路径拼接函数
     valid_directory = os.path.join(dataset, 'valid')  # 验证集的路径
     test_directory = os.path.join(dataset, 'test')  # 测试集路径
-    batch_size = 32  # 分成32组
+    batch_size = 64
 
     data = {
         'train': datasets.ImageFolder(root=train_directory, transform=image_transforms['train']),
