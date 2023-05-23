@@ -4,15 +4,16 @@ import torchvision
 import numpy as np
 from torchsummary import summary
 
-print("PyTorch Version: ", torch.__version__)
-print("Torchvision Version: ", torchvision.__version__)
 
 __all__ = ['SEResNet50', 'SEResNet101', 'SEResNet152']
 
 
 class SELayer(nn.Module):
+
     def __init__(self, channel, reduction=16):
+
         super(SELayer, self).__init__()
+
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
             nn.Linear(channel, channel // reduction, bias=False),
@@ -22,13 +23,16 @@ class SELayer(nn.Module):
         )
 
     def forward(self, x):
+
         b, c, _, _ = x.size()
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
+
         return x * y.expand_as(x)
 
 
 def Conv1(in_planes, places, stride=2):
+
     return nn.Sequential(
         nn.Conv2d(in_channels=in_planes, out_channels=places, kernel_size=7, stride=stride, padding=3, bias=False),
         nn.BatchNorm2d(places),
@@ -38,8 +42,11 @@ def Conv1(in_planes, places, stride=2):
 
 
 class Bottleneck(nn.Module):
+
     def __init__(self, in_places, places, stride=1, downsampling=False, expansion=4):
+
         super(Bottleneck, self).__init__()
+
         self.expansion = expansion
         self.downsampling = downsampling
 
@@ -53,29 +60,37 @@ class Bottleneck(nn.Module):
             nn.Conv2d(in_channels=places, out_channels=places * self.expansion, kernel_size=1, stride=1, bias=False),
             nn.BatchNorm2d(places * self.expansion),
         )
+
         self.se = SELayer(places * self.expansion, 16)
+
         if self.downsampling:
             self.downsample = nn.Sequential(
                 nn.Conv2d(in_channels=in_places, out_channels=places * self.expansion, kernel_size=1, stride=stride,
                           bias=False),
                 nn.BatchNorm2d(places * self.expansion)
             )
+
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
+
         residual = x
         out = self.bottleneck(x)
         out = self.se(out)
+
         if self.downsampling:
             residual = self.downsample(x)
 
         out += residual
         out = self.relu(out)
+
         return out
 
 
 class ResNet(nn.Module):
+
     def __init__(self, blocks, num_classes=5, expansion=4):
+
         super(ResNet, self).__init__()
         self.expansion = expansion
 
@@ -92,19 +107,23 @@ class ResNet(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
     def make_layer(self, in_places, places, block, stride):
+
         layers = []
         layers.append(Bottleneck(in_places, places, stride, downsampling=True))
+
         for i in range(1, block):
             layers.append(Bottleneck(places * self.expansion, places))
 
         return nn.Sequential(*layers)
 
     def forward(self, x):
+
         x = self.conv1(x)
 
         x = self.layer1(x)
@@ -115,6 +134,7 @@ class ResNet(nn.Module):
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
+
         return x
 
 
